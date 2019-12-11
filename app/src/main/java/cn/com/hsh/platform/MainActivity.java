@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             switch (msg.what) {
                 case 0:
                     myDialog.dismiss();
-//                    startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
+                    startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
                     new Thread() {//删除5天以前的日志
                         public void run() {
                             FileUtil.removeFileByTime(Environment.getExternalStorageDirectory() + "/APDAlog/");
@@ -86,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTextView2 = (TextView) findViewById(R.id.textView2);
         mEditText = (EditText) findViewById(R.id.editText);
         mEditText2 = (EditText) findViewById(R.id.editText2);
+        mEditText.setText("03152");
+        mEditText2.setText("4264282018");
         mButton = (Button) findViewById(R.id.button);
         mFloatingActionButton = (FloatingActionButton) findViewById(R.id.floatingActionButton);
 
@@ -101,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.floatingActionButton:
                 Toast.makeText(this, "进入设置界面", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, SecretActivity.class));// 跳转设置界面
                 break;
         }
     }
@@ -139,21 +142,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         if (DatabasePublic.loginHr(usertStr, pswStr)) {
                             //设置组织
                             //设置线路,缓存线路集合信息减少前端请求次数20191129
-                            String xlInfo = DatabasePublic.lsq_shazd_order_queryxl_zz(zz_OtherUrl.ZZID);
-                            zz_OtherUrl.xlInfo = xlInfo;
+//                            String xlInfo = DatabasePublic.lsq_shazd_order_queryxl_zz(zz_OtherUrl.ZZID);
+//                            zz_OtherUrl.xlInfo = xlInfo;
                             //设置账户
                             //zz_OtherUrl.Admin = usertStr;
                             //zz_OtherUrl.pwd = pswStr;
-                            if (zz_OtherUrl.ZZID.equals("")) {
-                                mHandler.sendEmptyMessage(3);
-
-                                return;
-                            }
-                            if (zz_OtherUrl.XL.equals("")) {
-                                mHandler.sendEmptyMessage(2);
-
-                                return;
-                            }
+//                            if (zz_OtherUrl.ZZID.equals("")) {
+//                                mHandler.sendEmptyMessage(3);
+//
+//                                return;
+//                            }
+//                            if (zz_OtherUrl.XL.equals("")) {
+//                                mHandler.sendEmptyMessage(2);
+//
+//                                return;
+//                            }
 
                         } else {
                             // Toast.makeText(MainActivity.this,"用户名或密码错误",Toast.LENGTH_LONG).show();
