@@ -1,13 +1,14 @@
 package cn.com.hsh.platform;
+/**
+ * 改用 AsyncHttpClient 实现异步请求  20191211
+ */
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Message;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,11 +18,20 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.TextHttpResponseHandler;
 import com.simple.spiderman.SpiderMan;
+
+import net.sf.json.JSONObject;
 
 import cn.com.hsh.platform.util.DatabasePublic;
 import cn.com.hsh.platform.util.FileUtil;
+import cn.com.hsh.platform.util.SQLDBHelper;
 import cn.com.hsh.platform.zz.zz_OtherUrl;
+import cz.msebera.android.httpclient.Header;
+
+
+import static cn.com.hsh.platform.util.SQLDBHelper.zz_create;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -32,45 +42,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mButton;
     private FloatingActionButton mFloatingActionButton;
     private ProgressDialog myDialog;
-
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case 0:
-                    myDialog.dismiss();
-                    startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
-                    new Thread() {//删除5天以前的日志
-                        public void run() {
-                            FileUtil.removeFileByTime(Environment.getExternalStorageDirectory() + "/APDAlog/");
-                        }}.start();
-                    break;
-                case 1:
-                    myDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "加载失败", Toast.LENGTH_LONG).show();
-                    break;
-                case 2:
-                    myDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "未选择默认线路，请到设置页面，设置默认线路", Toast.LENGTH_LONG).show();
-                    break;
-                case 3:
-                    myDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "未选择默认组织，请到设置页面，设置默认组织", Toast.LENGTH_LONG).show();
-                    break;
-                case 4:
-                    myDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "用户名或密码错误", Toast.LENGTH_LONG).show();
-                    break;
-                case 5:
-                    myDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
+    private SQLDBHelper sqldbHelper;//自定义数据库初始化类
+    private SQLiteDatabase db;//数据库类
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +66,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mButton.setOnClickListener(this);
         mFloatingActionButton.setOnClickListener(this);
+        sqldbHelper = new SQLDBHelper(this);
+        db = sqldbHelper.getWritableDatabase();
+
+        Cursor cursor = db.rawQuery(zz_create.ZT().getSe(new String[]{}, new String[]{"TYPE"}), new String[]{"1"});
+        if (cursor != null && cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                zz_OtherUrl.ZTID = cursor.getString(1);
+                zz_OtherUrl.ZTIP = "http://" + cursor.getString(2) + "/k3cloud/";//更改连接地址加上前缀后缀
+                break;
+            }
+        }
+        cursor = db.rawQuery(zz_create.ZZ().getSe(new String[]{}, new String[]{"TYPE"}), new String[]{"1"});
+        if (cursor != null && cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                zz_OtherUrl.ZZID = cursor.getString(1);
+                zz_OtherUrl.zzname = cursor.getString(2);
+                break;
+            }
+        }
+        cursor.close();
+        db.close();
     }
 
     @Override
@@ -129,60 +123,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //显示对话框
         myDialog = ProgressDialog.show(MainActivity.this, "请稍后...", "正在加载数据", true);
         myDialog.setCancelable(true);
-        new Thread() {
-            public void run() {
+
+        //创建实例
+        AsyncHttpClient client=new AsyncHttpClient();
+        String usertStr = mEditText.getText().toString().trim();
+        String pswStr = mEditText2.getText().toString().trim();
+        String url="https://main.hsh.com.cn/api/hrcontroller/checkuser"; // 中台hr登录接口
+        url = url + "?appkey=5A69586C78744F7977574A33784D3271442F30595942516C33747557643849393368576F5962374F7653554F544F367941477355672B50544B374C3479704C70&usercode="+usertStr+"&password="+pswStr;
+        //
+        client.get(this, url, new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                myDialog.dismiss();
+                Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String responseString) {
                 try {
-
-                    String usertStr = mEditText.getText().toString().trim();
-                    String pswStr = mEditText2.getText().toString().trim();
-                    int lang = 2052;
-                    try {
-                        DatabasePublic.POST_K3CloudURL = zz_OtherUrl.ZTIP;
-                        //if (DatabasePublic.Login(zz_OtherUrl.ZTID, usertStr, pswStr, lang)) {
-                        if (DatabasePublic.loginHr(usertStr, pswStr)) {
-                            //设置组织
-                            //设置线路,缓存线路集合信息减少前端请求次数20191129
-//                            String xlInfo = DatabasePublic.lsq_shazd_order_queryxl_zz(zz_OtherUrl.ZZID);
-//                            zz_OtherUrl.xlInfo = xlInfo;
-                            //设置账户
-                            //zz_OtherUrl.Admin = usertStr;
-                            //zz_OtherUrl.pwd = pswStr;
-//                            if (zz_OtherUrl.ZZID.equals("")) {
-//                                mHandler.sendEmptyMessage(3);
-//
-//                                return;
-//                            }
-//                            if (zz_OtherUrl.XL.equals("")) {
-//                                mHandler.sendEmptyMessage(2);
-//
-//                                return;
-//                            }
-
-                        } else {
-                            // Toast.makeText(MainActivity.this,"用户名或密码错误",Toast.LENGTH_LONG).show();
-                            myDialog.dismiss();
-                            mHandler.sendEmptyMessage(4);
-                            return;
-                        }
-                    } catch (Exception e) {
-
-                        Log.i("", e.getMessage().toString());
+                    JSONObject jsonObj = JSONObject.fromObject(responseString);
+                    if(jsonObj.getInt("returnCode")==-1){
                         myDialog.dismiss();
-                        mHandler.sendEmptyMessage(5);
-                        return;
+                        Toast.makeText(MainActivity.this, "用户名或密码错误", Toast.LENGTH_LONG).show();
+                    }else {
+                        zz_OtherUrl.loginName=jsonObj.getJSONObject("data").getString("fnameL2");//登录成功后传值 用户名
+                        zz_OtherUrl.loginId=jsonObj.getJSONObject("data").getString("fnumber");//登录成功后传值 用户ID
+                        myDialog.dismiss();
+                        startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
                     }
-
-
-                    mHandler.sendEmptyMessage(0);
-
-                } catch (Exception e) {
-
-                    mHandler.sendEmptyMessage(1);
-                    SpiderMan.show(e);
+                }catch (Exception e){
+                    myDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
                     e.printStackTrace();
+                    SpiderMan.show(e);
                 }
             }
-        }.start();//开始运行线程
+        });
+
+
 
     }
 }
