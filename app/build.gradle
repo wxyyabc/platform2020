@@ -61,4 +61,11 @@ dependencies {
 
     //异步网络请求类
     implementation 'com.loopj.android:android-async-http:1.4.9'
+
+
+    //使用Android Retrofit2.0 来处理网络请求
+    // Okhttp库
+    implementation 'com.squareup.okhttp3:okhttp:3.1.2'
+    // Retrofit库
+    implementation 'com.squareup.retrofit2:retrofit:2.0.2'
 }

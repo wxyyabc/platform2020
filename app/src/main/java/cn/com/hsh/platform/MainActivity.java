@@ -1,6 +1,7 @@
 package cn.com.hsh.platform;
 /**
- * 改用 AsyncHttpClient 实现异步请求  20191211
+ * 1、AsyncHttpClient 实现异步请求  20191211
+ * 2、Retroift 实现异步网络请求 20191212
  */
 
 import android.app.ProgressDialog;
@@ -9,6 +10,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,18 +19,26 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.simple.spiderman.SpiderMan;
 
-import net.sf.json.JSONObject;
+import java.util.List;
 
+import cn.com.hsh.platform.fastjson.FastJsonConverterFactory;
+import cn.com.hsh.platform.model.HrUser;
 import cn.com.hsh.platform.util.DatabasePublic;
 import cn.com.hsh.platform.util.FileUtil;
+import cn.com.hsh.platform.util.RetrofitApi;
 import cn.com.hsh.platform.util.SQLDBHelper;
 import cn.com.hsh.platform.zz.zz_OtherUrl;
 import cz.msebera.android.httpclient.Header;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 
 import static cn.com.hsh.platform.util.SQLDBHelper.zz_create;
@@ -128,38 +138,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AsyncHttpClient client=new AsyncHttpClient();
         String usertStr = mEditText.getText().toString().trim();
         String pswStr = mEditText2.getText().toString().trim();
-        String url="https://main.hsh.com.cn/api/hrcontroller/checkuser"; // 中台hr登录接口
-        url = url + "?appkey=5A69586C78744F7977574A33784D3271442F30595942516C33747557643849393368576F5962374F7653554F544F367941477355672B50544B374C3479704C70&usercode="+usertStr+"&password="+pswStr;
-        //
-        client.get(this, url, new TextHttpResponseHandler() {
+//        String url="https://main.hsh.com.cn/api/hrcontroller/checkuser"; // 中台hr登录接口
+//        url = url + "?appkey=5A69586C78744F7977574A33784D3271442F30595942516C33747557643849393368576F5962374F7653554F544F367941477355672B50544B374C3479704C70&usercode="+usertStr+"&password="+pswStr;
+//        //AsyncHttpClient 异步框架处理网络请示例
+//        client.get(this, url, new TextHttpResponseHandler() {
+//            @Override
+//            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+//                myDialog.dismiss();
+//                Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
+//            }
+//
+//            @Override
+//            public void onSuccess(int statusCode, Header[] headers, String responseString) {
+//                try {
+//                    JSONObject jsonObj = JSONObject.fromObject(responseString);
+//                    if(jsonObj.getInt("returnCode")==-1){
+//                        myDialog.dismiss();
+//                        Toast.makeText(MainActivity.this, "用户名或密码错误", Toast.LENGTH_LONG).show();
+//                    }else {
+//                        zz_OtherUrl.loginName=jsonObj.getJSONObject("data").getString("fnameL2");//登录成功后传值 用户名
+//                        zz_OtherUrl.loginId=jsonObj.getJSONObject("data").getString("fnumber");//登录成功后传值 用户ID
+//                        myDialog.dismiss();
+//                        startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
+//                    }
+//                }catch (Exception e){
+//                    myDialog.dismiss();
+//                    Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
+//                    e.printStackTrace();
+//                    SpiderMan.show(e);
+//                }
+//            }
+//        });
+
+        //Retrofit发起请求方式示例
+        //创建Retrofit对象
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(zz_OtherUrl.platformUrl) //基础url,其他部分在GetRequestInterface里
+                .addConverterFactory(FastJsonConverterFactory.create()) //fastjson数据转换器
+                .build();
+
+        //创建网络请求接口实例
+        RetrofitApi request = retrofit.create(RetrofitApi.class);
+        String appkey= "5A69586C78744F7977574A33784D3271442F30595942516C33747557643849393368576F5962374F7653554F544F367941477355672B50544B374C3479704C70";
+        Call<HrUser> call = request.hrLogin(appkey,usertStr,pswStr);
+
+        //发送网络请求(异步)
+        call.enqueue(new Callback<HrUser>() {
             @Override
-            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+            public void onResponse(Call<HrUser> call, Response<HrUser> response) {
+                HrUser userList = response.body();
+                zz_OtherUrl.loginName=userList.getData().getString("fnameL2");//登录成功后传值 用户名
+                zz_OtherUrl.loginId=userList.getData().getString("fnumber");//登录成功后传值 用户ID
                 myDialog.dismiss();
-                Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
+                startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
             }
 
             @Override
-            public void onSuccess(int statusCode, Header[] headers, String responseString) {
-                try {
-                    JSONObject jsonObj = JSONObject.fromObject(responseString);
-                    if(jsonObj.getInt("returnCode")==-1){
-                        myDialog.dismiss();
-                        Toast.makeText(MainActivity.this, "用户名或密码错误", Toast.LENGTH_LONG).show();
-                    }else {
-                        zz_OtherUrl.loginName=jsonObj.getJSONObject("data").getString("fnameL2");//登录成功后传值 用户名
-                        zz_OtherUrl.loginId=jsonObj.getJSONObject("data").getString("fnumber");//登录成功后传值 用户ID
-                        myDialog.dismiss();
-                        startActivity(new Intent(MainActivity.this, MenuActivity.class));// 跳转主界面
-                    }
-                }catch (Exception e){
-                    myDialog.dismiss();
-                    Toast.makeText(MainActivity.this, "网络异常", Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-                    SpiderMan.show(e);
-                }
+            public void onFailure(Call<HrUser> call, Throwable t) {
+                myDialog.dismiss();
+                Toast.makeText(MainActivity.this, "用户名或密码错误", Toast.LENGTH_LONG).show();
+                System.out.println(t.getMessage());
             }
         });
 
+////
 
 
     }

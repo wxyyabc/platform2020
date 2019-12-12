@@ -36,4 +36,5 @@ public class zz_OtherUrl {
     public static String ckInfo = "";//缓存仓库集合信息减少前端请求次数
     public static  boolean isOutAdd = false;//20191201根据最新需求把单据外商品不允许添加所以关闭
     public  static boolean isjhEnable = true;//20191205拣货完后跳回选择页面是否可用
+    public static String platformUrl = "https://main.hsh.com.cn/";//中台地址
 }

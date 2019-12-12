@@ -2,6 +2,7 @@ package cn.com.hsh.platform.util;
 
 import android.content.Context;
 
+import com.alibaba.fastjson.JSON;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -16,7 +17,7 @@ public class KingdeePublic {
 
     //先定义一个String类型来接收接口相同的部分
 
-    public static String POST_K3CloudURL = "";
+    public static String POST_K3CloudURL = "192.168.1.88";
     public static zz_CREATE_API zz_create_api = new zz_CREATE_API();
     private static String CookieVal = null;
     private static Map map = new HashMap<String, String>();
@@ -49,4 +50,7 @@ public class KingdeePublic {
         return POST_K3CloudURL + url;
     }
 
+    public static void main(String[] args) throws Exception {
+
+    }
 }
