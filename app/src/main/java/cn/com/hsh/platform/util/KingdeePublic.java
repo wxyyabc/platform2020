@@ -3,52 +3,75 @@ package cn.com.hsh.platform.util;
 import android.content.Context;
 
 import com.alibaba.fastjson.JSON;
-import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import cn.com.hsh.platform.zz.zz_CREATE_API;
-import cz.msebera.android.httpclient.HttpEntity;
+
 
 public class KingdeePublic {
 
-    //先定义一个String类型来接收接口相同的部分
+    //kingdee 服务器地址
 
-    public static String POST_K3CloudURL = "192.168.1.88";
+    public static final String KINGDEE_BASE_PATH = "http://192.168.1.88";
+    /**
+     * 用户验证
+     */
+    public static final String KINGDEE_VALIDATE_USER_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.AuthService.ValidateUser.common.kdsvc";
+
+    /**
+     * 保存
+     */
+    public static final String KINGDEE_SAVE_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Save.common.kdsvc";
+
+    /**
+     * 暂存
+     */
+    public static final String KINGDEE_DRAFT_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Draft.common.kdsvc";
+
+    /**
+     * 推送
+     */
+    public static final String KINGDEE_PUSH_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Push.common.kdsvc";
+
+    /**
+     * 审核
+     */
+    public static final String KINGDEE_AUDIT_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Audit.common.kdsvc";
+    /**
+     * 删除
+     */
+    public static final String KINGDEE_DELETE_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Delete.common.kdsvc";
+    /**
+     * 反审核
+     */
+    public static final String KINGDEE_UNAUDIT_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.UnAudit.common.kdsvc";
+    /**
+     * 提交
+     */
+    public static final String KINGDEE_SUBMIT_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Submit.common.kdsvc";
+    /**
+     * 查看
+     */
+    public static final String KINGDEE_VIEW_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.View.common.kdsvc";
+    /**
+     * 状态转换
+     */
+    public static final String KINGDEE_STATUS_CONVERT_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.StatusConvert.common.kdsvc";
+    /**
+     * 批量查询
+     */
+    public static final String KINGDEE_EXCCUTE_BILL_QUERY_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.ExecuteBillQuery.common.kdsvc";
+    /**
+     * 批量保存
+     */
+    public static final String KINGDEE_BATCH_SAVE_URL=KINGDEE_BASE_PATH+"/K3Cloud/Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.BatchSave.common.kdsvc";
+
     public static zz_CREATE_API zz_create_api = new zz_CREATE_API();
     private static String CookieVal = null;
     private static Map map = new HashMap<String, String>();
 
-    static {
-        map.put("Save", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Save.common.kdsvc");
-        map.put("View", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.View.common.kdsvc");
-        map.put("Submit", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Submit.common.kdsvc");
-        map.put("Audit", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.Audit.common.kdsvc");
-        map.put("UnAudit", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.UnAudit.common.kdsvc");
-        map.put("StatusConvert", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.StatusConvert.common.kdsvc");
-        map.put("ExcuteOperation", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.ExcuteOperation.common.kdsvc");
-        map.put("Query", "Kingdee.BOS.WebApi.ServicesStub.DynamicFormService.ExecuteBillQuery.common.kdsvc");
-        map.put("OrderQuery", "Kingdee.WebAPI.YJYS.XSDDCX.XSDDCX.ExecuteXSCX..common.kdsvc");
-    }
-    //建立静态的AsyncHttpClient
-    private static AsyncHttpClient client = new AsyncHttpClient();
-    //AsyncHttpClient中有get和post方法，需要用到public方法来修饰，以便调用
-
-
-    public  static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler){
-        client.get(getAbsoluteUrl(url), params, responseHandler);
-    }
-    //post方法中HttpEntity参数是后面发送JSON格式所用到的一个方法
-    public static void post(Context context, String url, HttpEntity entity, String contentType, AsyncHttpResponseHandler responseHandler) {
-        client.post(context,getAbsoluteUrl(url),entity, contentType, responseHandler);
-    }
-    //单独写一个方法添加URL
-    private static String getAbsoluteUrl(String url) {
-        return POST_K3CloudURL + url;
-    }
 
     public static void main(String[] args) throws Exception {
 

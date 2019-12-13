@@ -202,7 +202,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 ////
+        Retrofit retrofit2 = new  Retrofit.Builder()
+                .baseUrl("http://192.168.1.88/")
+                .addConverterFactory(FastJsonConverterFactory.create())
+                .build();
 
+        RetrofitApi request2 = retrofit2.create(RetrofitApi.class);
+        Call<JSONObject> call2 = request2.k3Login(zz_OtherUrl.ZTID,zz_OtherUrl.Admin,zz_OtherUrl.pwd,zz_OtherUrl.lang);
+        call2.enqueue(new Callback<JSONObject>(){
+            @Override
+            public void onResponse(Call<JSONObject> call, Response<JSONObject> response){
+                System.out.println("11"+response.body().toString());
+            }
+
+            @Override
+            public void onFailure(Call<JSONObject> call, Throwable t){
+                System.out.println("22"+t.getMessage());
+            }
+        });
 
     }
 }
